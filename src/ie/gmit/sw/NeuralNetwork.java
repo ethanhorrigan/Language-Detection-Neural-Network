@@ -7,9 +7,13 @@ import org.encog.ml.data.MLDataSet;
 import org.encog.ml.data.buffer.MemoryDataLoader;
 import org.encog.ml.data.buffer.codec.CSVDataCODEC;
 import org.encog.ml.data.buffer.codec.DataSetCODEC;
+import org.encog.ml.data.folded.FoldedDataSet;
+import org.encog.ml.train.MLTrain;
 import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
+import org.encog.neural.networks.training.cross.CrossValidationKFold;
 import org.encog.neural.networks.training.propagation.back.Backpropagation;
+import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 import org.encog.util.csv.CSVFormat;
 
 public class NeuralNetwork {
@@ -57,6 +61,10 @@ public class NeuralNetwork {
 		DataSetCODEC dsc = new CSVDataCODEC(new File("data.csv"), CSVFormat.ENGLISH, false, inputs, outputs, false);
 		MemoryDataLoader mdl = new MemoryDataLoader(dsc);
 		MLDataSet trainingSet = mdl.external2Memory();
+		
+		FoldedDataSet folded = new FoldedDataSet(trainingSet);
+		MLTrain train = new ResilientPropagation(network, folded);
+		CrossValidationKFold cv = new CrossValidationKFold(train, 5);
 
 		//Use backpropagation training with alpha=0.1 and momentum=0.2
 		Backpropagation trainer = new Backpropagation(network, trainingSet, 0.1, 0.2);
@@ -64,8 +72,10 @@ public class NeuralNetwork {
 		//Train the neural network
 		int epoch = 1; //Use this to track the number of epochs
 		do { 
-			trainer.iteration(); 
+			cv.iteration(); 
 			epoch++;
-		} while(trainer.getError() > 0.01);		
+		} while(cv.getError() > 0.01);
+		
+		Utilities.saveNeuralNetwork(network, "./testnetwork.nn");
 	}
 }
