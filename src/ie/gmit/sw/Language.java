@@ -1,5 +1,7 @@
 package ie.gmit.sw;
 
+import java.util.Arrays;
+
 public enum Language {
 	Achinese ("Achinese"),
 	Afrikaans ("Afrikaans"),
@@ -245,5 +247,15 @@ public enum Language {
 	
     public CharSequence getLanguageName() {
         return this.language;
+    }
+    
+    /**
+     * https://stackoverflow.com/a/33637868/8256162
+     * @param value
+     * @param enumClass
+     * @return
+     */
+    public static boolean isInEnum(String value, Class<Language> enumClass) {
+        return Arrays.stream(enumClass.getEnumConstants()).anyMatch(e -> e.name().equals(value));
     }
 }
