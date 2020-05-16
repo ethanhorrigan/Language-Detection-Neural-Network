@@ -1,14 +1,13 @@
 package ie.gmit.sw;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
-import java.util.Collection;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +26,13 @@ import ie.gmit.sw.utils.Utilities;
 public class VectorProcessor {
 	static UserSettings settings = UserSettings.getInstance();
 	private Logger logger = Logger.getLogger(VectorProcessor.class.getName());
-	private static double[] vector = new double[settings.getVectorSize()];
+	private static double[] vector = new double[100];
 	private static double[] langVector = new double[Language.values().length];
 	private static double[] queryVector = new double[settings.getVectorSize()];
 	private static DecimalFormat df = new DecimalFormat("###.###");
 	private static DecimalFormat dfl = new DecimalFormat("#.#");
-	private static int n = settings.getNgram();
+	private HashMap<String, Integer> processedLangs = new HashMap<String, Integer>();
+	private static int n = 3;
 	private static File dataCsv = new File(Constants.CSV_DATA);
 	private FileWriter csvWriter;
 	private FileWriter dataPro;
@@ -60,6 +60,9 @@ public class VectorProcessor {
 				settings.setNormalisedQuery(queryVector);
 				// new NeuralNetwork().predict(settings.getNormalisedQuery());
 			}
+			
+
+			System.out.println(processedLangs);
 		} catch (Exception e) {
 			System.out.println("error reading lines");
 		}
@@ -69,11 +72,26 @@ public class VectorProcessor {
 	public void process(String line) throws IOException {
 		String[] record = line.split("@");
 		if (record.length > 2) return;
-			
+		
+		if(processedLangs.containsKey(record[1])) {
+			processedLangs.put(record[1], processedLangs.get(record[1]) + 1);
+		}
+		else {
+			processedLangs.put(record[1], 1);
+		}
 		
 		String text = record[0].toLowerCase();
 		String lang = record[1];
+
 		
+		
+		
+		/*
+		dataPro = new FileWriter("testdata.txt", true);
+		dataPro.append(text);
+		dataPro.flush();
+		dataPro.close();
+		*/
 		/**
 		 * If the language is not in the enum, return.
 		 */
@@ -129,6 +147,10 @@ public class VectorProcessor {
 		queryVector = Utilities.normalize(queryVector, -1.0, 1.0);
 
 		return queryVector;
+	}
+	
+	public static void main(String[] args) throws IOException, Exception {
+		new VectorProcessor().go(true);
 	}
 	
 
